@@ -1,6 +1,6 @@
-import { UserData, Task, Schedule, OptimizationResult } from '@/lib/types';
+import { UserData, Task, Schedule, OptimizationResult } from '@/lib/types/types';
 import { HealthAnalyzer } from './health-analyzer';
-import { MachineLearningEngine } from './learning-engine'; // Pastikan file ini ada
+import { MachineLearningEngine } from './learning-engine';
 
 export class AIScheduleOptimizer {
   private userData: UserData;
@@ -51,60 +51,49 @@ export class AIScheduleOptimizer {
     preferences: any,
     constraints: any
   ): Schedule[] {
-    // Complex AI algorithm for task scheduling
     const sortedTasks = tasks.sort((a, b) => {
-      // Multi-factor sorting based on:
-      // 1. Priority
-      // 2. Energy requirements vs available energy
-      // 3. Historical performance
-      // 4. User preferences
-      // 5. Time constraints
-
-      const priorityScore = b.priority - a.priority;
+      const priorityScore = (b.priority || 0) - (a.priority || 0);
       const energyScore = this.calculateEnergyScore(a, b, energyPattern);
       const performanceScore = this.calculatePerformanceScore(a, b, performanceData);
       
       return priorityScore * 0.4 + energyScore * 0.3 + performanceScore * 0.3;
     });
 
-    // Convert to schedule with time slots
     return this.assignTimeSlots(sortedTasks, energyPattern, constraints);
   }
 
   private calculateEnergyScore(taskA: Task, taskB: Task, energyPattern: any): number {
-    // Implementation of energy-based scoring
     const taskAEnergyFit = this.getEnergyFit(taskA, energyPattern);
     const taskBEnergyFit = this.getEnergyFit(taskB, energyPattern);
     return taskBEnergyFit - taskAEnergyFit;
   }
 
   private getEnergyFit(task: Task, energyPattern: any): number {
-    // Calculate how well a task fits the user's energy pattern
     const taskEnergyRequirement = this.getTaskEnergyRequirement(task);
-    const availableEnergy = energyPattern.getEnergyAtTime(task.preferredTime);
+    const availableEnergy = energyPattern.getEnergyAtTime(task.preferredTime || '09:00');
+    if (taskEnergyRequirement === 0) return 1.0;
     return Math.min(availableEnergy / taskEnergyRequirement, 1.0);
   }
-
+    
   private calculateEfficiencyScore(schedule: Schedule[]): number {
-    // Calculate overall efficiency score (0-100)
+    if (!schedule || schedule.length === 0) return 0;
     let totalScore = 0;
-    let weights = 0;
+    let totalWeight = 0;
 
     for (const item of schedule) {
       const itemScore = this.calculateItemEfficiency(item);
-      const weight = item.priority;
+      const weight = item.priority || 1;
       totalScore += itemScore * weight;
-      weights += weight;
+      totalWeight += weight;
     }
-
-    return weights > 0 ? (totalScore / weights) * 100 : 0;
+    
+    if (totalWeight === 0) return 0;
+    return Math.round((totalScore / totalWeight) * 100);
   }
 
   private generateInsights(schedule: Schedule[], energyPattern: any): string[] {
     const insights = [];
-
-    // Analyze schedule patterns
-    const highEnergyTasks = schedule.filter(s => s.energyRequirement > 0.7);
+    const highEnergyTasks = schedule.filter(s => (s as any).energyRequirement > 0.7);
     const peakEnergyHours = energyPattern.getPeakHours();
 
     if (highEnergyTasks.length > 0) {
@@ -118,48 +107,48 @@ export class AIScheduleOptimizer {
         insights.push('Energy optimization opportunity: Consider moving high-energy tasks to your peak performance hours.');
       }
     }
+    return insights;
+  }
 
-    private calculatePerformanceScore(taskA: Task, taskB: Task, performanceData: any): number {
-    // Mock implementation
-    return 0;
+  // --- METODE-METODE BARU YANG DIPERLUKAN ---
+  private calculatePerformanceScore(taskA: Task, taskB: Task, performanceData: any): number {
+    return 0; // Implementasi contoh
   }
 
   private assignTimeSlots(tasks: Task[], energyPattern: any, constraints: any): Schedule[] {
-    // Mock implementation - konversi task menjadi schedule dengan slot waktu
-    return tasks.map((task, index) => ({
-      ...task,
-      startTime: `09:00`,
-      endTime: `10:00`,
-      energyRequirement: 0.5,
-    })) as unknown as Schedule[];
+    // Implementasi contoh: ubah Task menjadi Schedule
+    const now = new Date();
+    return tasks.map((task, index) => {
+        const startTime = new Date(now.getTime() + index * 60 * 60 * 1000); // Setiap jam
+        const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
+        return {
+            ...task,
+            id: task.id || `task-${index}`,
+            title: `Task ${index + 1}`,
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString(),
+            energyRequirement: this.getTaskEnergyRequirement(task),
+        } as unknown as Schedule;
+    });
   }
 
   private getTaskEnergyRequirement(task: Task): number {
-    // Mock implementation
-    return 0.6; 
+    return 0.5; // Implementasi contoh
   }
-
+  
   private calculateItemEfficiency(item: Schedule): number {
-    // Mock implementation
-    return item.priority * 10;
+    return (item.priority || 1) * 10; // Implementasi contoh
   }
 
   private calculateEnergyAlignment(schedule: Schedule[], energyPattern: any): number {
-    // Mock implementation
-    return 85.5;
+    return 80; // Implementasi contoh
   }
 
   private calculatePriorityBalance(schedule: Schedule[]): number {
-    // Mock implementation
-    return 90.1;
+    return 90; // Implementasi contoh
   }
 
   private calculateTimeEfficiency(schedule: Schedule[]): number {
-    // Mock implementation
-    return 95.0;
-  }
-
-    // Add more intelligent insights based on patterns
-    return insights;
+    return 95; // Implementasi contoh
   }
 }

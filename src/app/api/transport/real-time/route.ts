@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { TransportOptimizer } from '@/lib/ai/transport-optimizer';
 import { GoogleMapsIntegration } from '@/lib/integrations/maps';
 import { WeatherIntegration } from '@/lib/integrations/weather';
+import { verifyJWT } from '@/lib/auth/jwt'; 
+import { cacheTransportData } from '@/lib/database/queries';
 
 export async function POST(request: NextRequest) {
   try {
