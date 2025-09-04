@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ils-app
+  labels:
+    app: ils-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      [cite_start]app: ils-app # [cite: 12]
+  template:
+    metadata:
+      labels:
+        app: ils-app
+    spec:
+      containers:
+      - name: ils-app
+        image: ils-app:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - [cite_start]name: DATABASE_URL # [cite: 13]
+          valueFrom:
+            secretKeyRef:
+              name: ils-secrets
+              key: database-url
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              [cite_start]name: ils-secrets # [cite: 14]
+              key: jwt-secret
+        - name: REDIS_URL
+          value: "redis://redis-service:6379"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            [cite_start]memory: "512Mi" # [cite: 15]
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          [cite_start]httpGet: # [cite: 16]
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5

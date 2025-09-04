@@ -1,0 +1,122 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          [cite_start]POSTGRES_DB: ils_test # [cite: 21]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        [cite_start]options: >- # [cite: 22]
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      [cite_start]with: # [cite: 23]
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run linting
+      run: npm run lint
+    
+    - name: Run type checking
+      run: npm run type-check
+    
+    - name: Setup test database
+      env:
+        [cite_start]DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ils_test # [cite: 24]
+      run: |
+        npx prisma generate
+        npx prisma db push # [cite: 25]
+    
+    - name: Run unit tests
+      run: npm run test
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ils_test
+        REDIS_URL: redis://localhost:6379
+    
+    - name: Run integration tests
+      run: npm run test:integration
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ils_test
+        [cite_start]REDIS_URL: redis://localhost:6379 # [cite: 26]
+    
+    - name: Build application
+      run: npm run build
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+    - [cite_start]name: Run npm audit # [cite: 27]
+      run: npm audit --audit-level moderate
+
+  deploy:
+    needs: [test, security]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        [cite_start]username: ${{ secrets.DOCKERHUB_USERNAME }} # [cite: 28]
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        [cite_start]push: true # [cite: 29]
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/ils-app:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Deploy to Kubernetes
+      uses: azure/k8s-deploy@v1
+      with:
+        manifests: |
+          kubernetes/deployment.yaml
+          kubernetes/service.yaml
+        kubectl-version: 'latest'
