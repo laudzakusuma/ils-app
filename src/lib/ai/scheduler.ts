@@ -1,6 +1,6 @@
 import { UserData, Task, Schedule, OptimizationResult } from '@/lib/types';
 import { HealthAnalyzer } from './health-analyzer';
-import { MachineLearningEngine } from './learning-engine';
+import { MachineLearningEngine } from './learning-engine'; // Pastikan file ini ada
 
 export class AIScheduleOptimizer {
   private userData: UserData;
@@ -18,13 +18,9 @@ export class AIScheduleOptimizer {
     preferences: any, 
     constraints: any
   ): Promise<OptimizationResult> {
-    // Get user's energy patterns from health data
     const energyPattern = await this.healthAnalyzer.getEnergyPattern(this.userData.id);
-    
-    // Get historical performance data
     const performanceData = await this.mlEngine.getPerformanceData();
     
-    // Apply AI optimization algorithm
     const optimizedTasks = this.optimizeTaskScheduling(
       tasks,
       energyPattern,
@@ -33,10 +29,7 @@ export class AIScheduleOptimizer {
       constraints
     );
 
-    // Calculate efficiency score
     const efficiencyScore = this.calculateEfficiencyScore(optimizedTasks);
-    
-    // Generate AI insights
     const insights = this.generateInsights(optimizedTasks, energyPattern);
 
     return {
@@ -125,6 +118,46 @@ export class AIScheduleOptimizer {
         insights.push('Energy optimization opportunity: Consider moving high-energy tasks to your peak performance hours.');
       }
     }
+
+    private calculatePerformanceScore(taskA: Task, taskB: Task, performanceData: any): number {
+    // Mock implementation
+    return 0;
+  }
+
+  private assignTimeSlots(tasks: Task[], energyPattern: any, constraints: any): Schedule[] {
+    // Mock implementation - konversi task menjadi schedule dengan slot waktu
+    return tasks.map((task, index) => ({
+      ...task,
+      startTime: `09:00`,
+      endTime: `10:00`,
+      energyRequirement: 0.5,
+    })) as unknown as Schedule[];
+  }
+
+  private getTaskEnergyRequirement(task: Task): number {
+    // Mock implementation
+    return 0.6; 
+  }
+
+  private calculateItemEfficiency(item: Schedule): number {
+    // Mock implementation
+    return item.priority * 10;
+  }
+
+  private calculateEnergyAlignment(schedule: Schedule[], energyPattern: any): number {
+    // Mock implementation
+    return 85.5;
+  }
+
+  private calculatePriorityBalance(schedule: Schedule[]): number {
+    // Mock implementation
+    return 90.1;
+  }
+
+  private calculateTimeEfficiency(schedule: Schedule[]): number {
+    // Mock implementation
+    return 95.0;
+  }
 
     // Add more intelligent insights based on patterns
     return insights;

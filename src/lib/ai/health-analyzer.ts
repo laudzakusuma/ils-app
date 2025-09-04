@@ -1,6 +1,8 @@
+import { getHealthHistory } from '@/lib/database/queries';
+import { EnergyPattern } from './energy-pattern';
+
 export class HealthAnalyzer {
   async analyzeHealthMetrics(userId: string, metrics: any) {
-    // Comprehensive health analysis
     const analysis = {
       overall_score: this.calculateOverallHealthScore(metrics),
       trends: await this.analyzeTrends(userId, metrics),
@@ -46,13 +48,43 @@ export class HealthAnalyzer {
     };
 
     const range = ranges[metric];
-    if (!range) return 0.5; // Default neutral score
+    if (!range) return 0.5;
 
     if (value <= range.optimal) {
       return Math.max(0, (value - range.min) / (range.optimal - range.min));
     } else {
       return Math.max(0, 1 - ((value - range.optimal) / (range.max - range.optimal)));
     }
+  }
+
+   private generateHealthRecommendations(metrics: any): string[] {
+    const recommendations = [];
+    if (metrics.steps < 5000) {
+      recommendations.push('Try to be more active today.');
+    }
+    if (metrics.hydration < 60) {
+      recommendations.push('Remember to drink more water.');
+    }
+    return recommendations;
+  }
+
+  private checkHealthAlerts(metrics: any): string[] {
+    const alerts = [];
+    if (metrics.heartRate > 120 || metrics.heartRate < 50) {
+      alerts.push('Unusual heart rate detected.');
+    }
+    return alerts;
+  }
+
+  private generateHealthInsights(metrics: any): string[] {
+    return ['Your energy levels are consistent with your sleep patterns.'];
+  }
+
+  private async analyzeTrends(userId: string, currentMetrics: any) {
+    return {
+      steps: 'increasing',
+      energy: 'stable'
+    };
   }
 
   async getEnergyPattern(userId: string) {

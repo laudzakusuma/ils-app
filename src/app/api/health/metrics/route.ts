@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { HealthAnalyzer } from '@/lib/ai/health-analyzer';
-import { updateHealthData } from '@/lib/database/queries';
+import { updateHealthData, getHealthDataByRange, generateHealthAnalytics } from '@/lib/database/queries';
 import { validateHealthData } from '@/lib/utils/validation';
+import { verifyJWT } from '@/lib/auth/jwt';
 
 export async function POST(request: NextRequest) {
   try {
